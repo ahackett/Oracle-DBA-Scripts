@@ -1,4 +1,4 @@
-REM http://oracle-guy.com/scripts/awr_plan_change.sql
+REM Script by Kerry Osborne: http://oracle-guy.com/scripts/awr_plan_change.sql
 
 set lines 155
 col execs for 999,999,999
