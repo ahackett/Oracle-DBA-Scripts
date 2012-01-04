@@ -24,4 +24,4 @@ GROUP BY sso.owner,
          sso.object_name,
          sso.subobject_name,
          sso.object_type
-ORDER BY SUM (SS.SPACE_ALLOCATED_DELTA) DESC
+ORDER BY SUM (SS.SPACE_ALLOCATED_DELTA) DESC;
