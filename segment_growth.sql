@@ -1,7 +1,7 @@
 --
 -- Show total growth per segment for all segments in a given tablespace during the past n days
 -- Assumes you are licenced for the tuning and diagnostics package, since we're using the AWR
--- tables...
+-- tables.
 --
 
   SELECT sso.owner,
