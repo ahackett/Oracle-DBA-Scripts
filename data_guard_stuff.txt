@@ -1,0 +1,23 @@
+--
+-- Monitor redo transport delays by comparing the highest sequence
+-- numbers on the primary and standby databases
+--
+
+select max(sequence#), thread#
+  from v$archived_log
+ group by thread#;
+
+---
+--- Monitor the progress of Managed Recovery Process
+---
+
+select process, status, client_process, thread#, sequence#, block#, blocks
+from   v$managed_standby;
+
+---
+--- Is real-time apply enabled?
+---
+
+select recovery_mode 
+from   v$archive_dest_status
+where  dest_id = &dest_id;
