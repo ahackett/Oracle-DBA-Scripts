@@ -21,3 +21,8 @@ from   v$managed_standby;
 select recovery_mode 
 from   v$archive_dest_status
 where  dest_id = &dest_id;
+
+---
+--- show configuration/database raiseed an ORA-16810...
+---
+show database '<dbname>' 'StatusReport';

@@ -1,0 +1,28 @@
+---
+--- The TM enqueue locks a structure from change and involves an exclusive
+--- row level lock. A common cause of TM contention involves referential
+--- integrity constraints. For example, a session inserts a new value into
+--- a child table and then a second session wants to delete a row in the parent
+--- This session only knows there is an outstanding change, it doesn't know
+--- what the pending value is. Therefore, it has to wait so that there is
+--- no chance of it changing the parent record and violating the constraint
+--- Lengthy waits can occur when the change to the child table is left
+--- uncommited for a long time, or there is no index on the child's foreign
+--- key column so a full scan occurs when verifying the constraint.
+---
+--- The following query shows sessions waiting on the TM enqueue e.g. attempting
+--- to modify the parent table, and also shows the child table being modified
+--- by the blocker. The mode will be 4 when the blocked session is trying
+--- to delete from the parent, and 3 when attempting to insert into the parent.
+--- 
+
+ SELECT sample_time,
+         event,
+         sql_id,
+         MOD (p1, 16) AS "mode",
+         p2 || ' ' || o.name obj,
+         machine,
+         program
+    FROM v$active_session_history ash, sys.obj$ o
+   WHERE event = 'enq: TM - contention' AND o.obj#(+) = ash.p2
+ORDER BY sample_time;
