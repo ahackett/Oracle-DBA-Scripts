@@ -1,0 +1,40 @@
+---
+--- Objects that are being scanned e.g. full tablescan or index fast full scan
+---
+  SELECT owner,
+         object_type,
+         object_name,
+         subobject_name,
+         tablespace_name,
+         VALUE scans
+    FROM V$segment_statistics
+   WHERE statistic_name = 'segment scans' AND VALUE != 0
+ORDER BY VALUE desc;
+
+---
+--- Objects that are being scanned e.g. full tablescan or index fast full scan from
+--- AWR
+---
+  SELECT sso.owner,
+         sso.object_name,
+         sso.subobject_name,
+         sso.object_type,
+         SUM (ss.table_scans_delta)
+    FROM dba_hist_seg_stat ss, dba_hist_seg_stat_obj sso, dba_hist_snapshot sn
+   WHERE     ss.dbid = sso.dbid
+         AND ss.ts# = sso.ts#
+         AND ss.obj# = sso.obj#
+         AND ss.dataobj# = sso.dataobj#
+         AND ss.dbid = sn.dbid
+         AND ss.instance_number = sn.instance_number
+         AND ss.snap_id = sn.snap_id
+         AND sn.begin_interval_time >=
+                TO_DATE ('&start', 'dd/mm/yyyy hh24:mi:ss')
+         AND sn.begin_interval_time <=
+                TO_DATE ('&end', 'dd/mm/yyyy hh24:mi:ss')
+GROUP BY sso.owner,
+         sso.object_name,
+         sso.subobject_name,
+         sso.object_type
+  HAVING SUM (ss.table_scans_delta) > 0
+ORDER BY SUM (ss.table_scans_delta) DESC;
