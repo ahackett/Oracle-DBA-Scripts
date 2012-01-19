@@ -1,6 +1,8 @@
   SELECT parsing_schema_name,
          plan_hash_value,
-         child_number sql_plan_baseline,
+         child_number,
+         sql_plan_baseline,
+         executions,
          ROUND (buffer_gets / executions, 2) avg_buffer_gets_per_exec,
          ROUND (disk_reads / executions, 2) avg_disk_reads_per_exec,
          ROUND ( (cpu_time / executions) / 1000000, 2) avg_cpu_secs_per_exec,
@@ -12,4 +14,4 @@
          is_bind_aware
     FROM v$sql
    WHERE sql_id = '&sql_id'
-ORDER BY avg_elpased_secs_per_exec;
+ORDER BY plan_hash_value, avg_elpased_secs_per_exec;
