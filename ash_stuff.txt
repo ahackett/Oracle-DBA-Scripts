@@ -1,4 +1,57 @@
 ---
+--- Top Waits
+---
+
+  SELECT wait_class, event, COUNT (*)
+    FROM v$active_session_history
+   WHERE session_state = 'WAITING'
+         /*AND sample_time >=
+                TO_DATE ('24/01/2012 08:41:23', 'dd/mm/yyyy hh24:mi:ss')
+         AND sample_time <=
+                TO_DATE ('24/01/2012 08:46:25', 'dd/mm/yyyy hh24:mi:ss')*/
+GROUP BY wait_class, event
+ORDER BY COUNT (*) DESC;
+
+---
+--- Waiting sessions
+--- Good for when you know a spike has occurred for a particular wait event
+--- and you want to get an overview of who the blocking sessions were. You
+--- can drill into those further by uncommenting the session_id predicate
+--- and specifying the relevent blocking sids.
+---
+--- Adapted from:
+--- http://dboptimizer.com/2012/01/19/buffer-busy-waits-and-disk-file-operations-io
+---
+
+  SELECT TO_CHAR (MIN (sample_time), 'HH24:MI') maxst,
+         TO_CHAR (MAX (sample_time), 'HH24:MI') minst,
+         COUNT (*),
+         session_id,
+         session_serial#,
+         ash.p1,
+         ash.p2,
+         ash.p3,
+         ash.SQL_ID,
+         blocking_session bsid,
+         blocking_session_serial# bserial
+    FROM ash_240112_0931 ash
+   WHERE event = '&event' AND session_state = 'WAITING'
+         /*AND sample_time >=
+                TO_DATE ('&start', 'dd/mm/yyyy hh24:mi:ss')
+         AND sample_time <=
+                TO_DATE ('&end', 'dd/mm/yyyy hh24:mi:ss')
+     AND session_id IN (3863, 1095)*/
+GROUP BY session_id,
+         session_serial#,
+         sql_id,
+         blocking_session,
+         blocking_session_serial#,
+         ash.p1,
+         ash.p2,
+         ash.p3
+ORDER BY 1;
+
+---
 --- The TM enqueue locks a structure from change and involves an exclusive
 --- row level lock. A common cause of TM contention involves referential
 --- integrity constraints. For example, a session inserts a new value into
