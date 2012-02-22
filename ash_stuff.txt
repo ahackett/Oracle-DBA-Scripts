@@ -1,19 +1,19 @@
 ---
---- Top Waits
+--- Top Waits - AWR ASH
 ---
 
   SELECT wait_class, event, COUNT (*)
-    FROM v$active_session_history
-   WHERE session_state = 'WAITING'
-         /*AND sample_time >=
-                TO_DATE ('24/01/2012 08:41:23', 'dd/mm/yyyy hh24:mi:ss')
-         AND sample_time <=
-                TO_DATE ('24/01/2012 08:46:25', 'dd/mm/yyyy hh24:mi:ss')*/
+    FROM dba_hist_active_sess_history
+   WHERE     session_state = 'WAITING'
+         --AND wait_class = '&wait_class'
+         AND sample_time >= TO_DATE ('&start', 'dd/mm/yyyy hh24:mi:ss')
+         AND sample_time <= TO_DATE ('&end', 'dd/mm/yyyy hh24:mi:ss')
 GROUP BY wait_class, event
 ORDER BY COUNT (*) DESC;
 
 ---
---- Waiting sessions
+--- Waiting sessions - AWR ASH
+---
 --- Good for when you know a spike has occurred for a particular wait event
 --- and you want to get an overview of who the blocking sessions were. You
 --- can drill into those further by uncommenting the session_id predicate
@@ -23,8 +23,8 @@ ORDER BY COUNT (*) DESC;
 --- http://dboptimizer.com/2012/01/19/buffer-busy-waits-and-disk-file-operations-io
 ---
 
-  SELECT TO_CHAR (MIN (sample_time), 'HH24:MI') maxst,
-         TO_CHAR (MAX (sample_time), 'HH24:MI') minst,
+  SELECT TO_CHAR (MIN (sample_time), 'HH24:MI') minst,
+         TO_CHAR (MAX (sample_time), 'HH24:MI') maxst,
          COUNT (*),
          session_id,
          session_serial#,
@@ -34,13 +34,12 @@ ORDER BY COUNT (*) DESC;
          ash.SQL_ID,
          blocking_session bsid,
          blocking_session_serial# bserial
-    FROM ash_240112_0931 ash
-   WHERE event = '&event' AND session_state = 'WAITING'
-         /*AND sample_time >=
-                TO_DATE ('&start', 'dd/mm/yyyy hh24:mi:ss')
-         AND sample_time <=
-                TO_DATE ('&end', 'dd/mm/yyyy hh24:mi:ss')
-     AND session_id IN (3863, 1095)*/
+    FROM dba_hist_active_sess_history ash
+   WHERE     event = '&event'
+         AND session_state = 'WAITING'
+         AND sample_time >= TO_DATE ('&start', 'dd/mm/yyyy hh24:mi:ss')
+         AND sample_time <= TO_DATE ('&end', 'dd/mm/yyyy hh24:mi:ss')
+         --AND session_id IN (1938, 2863)
 GROUP BY session_id,
          session_serial#,
          sql_id,
@@ -50,6 +49,41 @@ GROUP BY session_id,
          ash.p2,
          ash.p3
 ORDER BY 1;
+
+---
+--- ASH Detail - AWR ASH
+---
+
+  SELECT sample_time,
+         session_id,
+         session_serial#,
+         session_type,
+         u.username,
+         sql_id,
+         sql_child_number,
+         is_sqlid_current,
+         sql_opname,
+         top_level_sql_id,
+         event,
+         wait_class,
+         p1,
+         p2,
+         p3,
+         session_state,
+         blocking_session,
+         blocking_session_serial#,
+         program,
+         module,
+         machine
+    FROM dba_hist_active_sess_history ash, dba_users u
+   WHERE     sample_time >= TO_DATE ('&start', 'dd/mm/yyyy hh24:mi:ss')
+         AND sample_time <= TO_DATE ('&end', 'dd/mm/yyyy hh24:mi:ss')
+         --AND event = '&event'
+         --AND wait_class = '&wait_class'
+         --AND session_state = 'WAITING'
+         --AND sql_id = '&sql_id'
+         AND ash.user_id = u.user_id
+ORDER BY sample_time ASC;
 
 ---
 --- The TM enqueue locks a structure from change and involves an exclusive
