@@ -1,10 +1,28 @@
 --
 -- Monitor redo transport delays by comparing the highest sequence
 -- numbers on the primary and standby databases
+-- 
+-- Note that v$log_history contains archive logs that are being applied
+-- (but not necessarily completed).
 --
 
 select max(sequence#), thread#
   from v$archived_log
+ group by thread#;
+
+--
+-- Monitor redo transport delays by comparing the highest sequence
+-- numbers on the primary and standby databases
+-- 
+-- Note that v$archived_log contains archive logs recieved from the
+-- primary and applied by MRP. If logs have been manually applied
+-- they won't be reported by this query, but will by the previous
+-- one
+--
+
+select max(sequence#), thread#
+  from v$archived_log 
+ where applied='YES'
  group by thread#;
 
 ---

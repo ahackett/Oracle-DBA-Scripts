@@ -101,7 +101,11 @@ ORDER BY sample_time ASC;
 --- to modify the parent table, and also shows the child table being modified
 --- by the blocker. The mode will be 4 when the blocked session is trying
 --- to delete from the parent, and 3 when attempting to insert into the parent.
---- 
+--- Based on some comments on oracle-l it would appear that mode 2 is where a
+--- session is blocked trying to modify the parent and there has been an insert
+--- into the child. Mode 6 means someone has issued "lock table in exclusive mode"
+--- "create index" or "insert /*+ append */ select"
+---
 
  SELECT sample_time,
          event,
