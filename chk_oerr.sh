@@ -40,7 +40,7 @@ PATH=/usr/bin:/usr/local/bin; export PATH
 #----------------------------------------------------------------------------
 notify_via_email() # ...use email to notify people...
 {
-        cat << __EOF__ | mailx -s "$Pgm $(uname -n)" dba@sportingbet.com
+        cat << __EOF__ | mailx -s "$Pgm $(uname -n)" dba@mycompany.com
 $ErrMsg
 __EOF__
 } # ...end of shell function "notify_via_email"...
