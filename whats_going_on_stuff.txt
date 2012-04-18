@@ -1,0 +1,55 @@
+---
+--- How many users are waiting on what events right now...
+--- http://blog.tanelpoder.com/2008/08/07/the-simplest-query-for-checking-whats-happening-in-a-database/
+---
+  SELECT event, state, COUNT (*)
+    FROM v$session_wait
+GROUP BY event, state
+ORDER BY 3 DESC
+
+---
+--- As above, but some decodes to make the output clearer
+--- http://blog.tanelpoder.com/2008/08/07/the-simplest-query-for-checking-whats-happening-in-a-database/
+---
+  SELECT COUNT (*),
+         CASE WHEN state != 'WAITING' THEN 'WORKING' ELSE 'WAITING' END
+            AS state,
+         CASE WHEN state != 'WAITING' THEN 'On CPU / runqueue' ELSE event END
+            AS sw_event
+    FROM v$session_wait
+GROUP BY CASE WHEN state != 'WAITING' THEN 'WORKING' ELSE 'WAITING' END,
+         CASE WHEN state != 'WAITING' THEN 'On CPU / runqueue' ELSE event END
+ORDER BY 1 DESC, 2 DESC
+
+---
+--- As above, but excluding background processes and idle sessions
+--- http://blog.tanelpoder.com/2008/08/07/the-simplest-query-for-checking-whats-happening-in-a-database/
+---
+  SELECT COUNT (*),
+         CASE WHEN state != 'WAITING' THEN 'WORKING' ELSE 'WAITING' END
+            AS state,
+         CASE WHEN state != 'WAITING' THEN 'On CPU / runqueue' ELSE event END
+            AS sw_event
+    FROM v$session
+   WHERE TYPE = 'USER' AND status = 'ACTIVE'
+GROUP BY CASE WHEN state != 'WAITING' THEN 'WORKING' ELSE 'WAITING' END,
+         CASE WHEN state != 'WAITING' THEN 'On CPU / runqueue' ELSE event END
+ORDER BY 1 DESC, 2 DESC
+
+---
+--- What SQL is being executed right now?
+--- http://blog.tanelpoder.com/2008/08/07/the-simplest-query-for-checking-whats-happening-in-a-database/
+---
+  SELECT sql_id, COUNT (*)
+    FROM v$session
+   WHERE status = 'ACTIVE'
+GROUP BY sql_id
+ORDER BY 2 DESC;
+
+---
+--- Drill down
+--- http://blog.tanelpoder.com/2008/08/07/the-simplest-query-for-checking-whats-happening-in-a-database/
+---
+SELECT sql_text, users_executing
+  FROM v$sql
+ WHERE sql_id = '&sql_id'
