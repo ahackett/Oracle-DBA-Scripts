@@ -4,7 +4,7 @@
          outline_category,
          sql_patch,
          sql_plan_baseline,
-         sql_profile,      
+         sql_profile        
          executions,
          ROUND (buffer_gets / executions, 2) avg_buffer_gets_per_exec,
          ROUND (disk_reads / executions, 2) avg_disk_reads_per_exec,
