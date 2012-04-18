@@ -1,0 +1,20 @@
+---
+--- Statistics for a given sql_id by hour (assuming your AWR
+--- snapshots happen at least every hour)
+---
+  SELECT TRUNC (sn.begin_interval_time, 'HH24') hr,
+         MAX (ss.version_count) version_count,
+         MAX (ss.sharable_mem) sharable_mem,
+         SUM (ss.executions_delta) executions,
+         SUM (ss.parse_calls_delta) parse_calls,
+         (SUM (ss.cpu_time_delta)) / 1000000 cpu_time_secs,
+         (SUM (ss.buffer_gets_delta)) buffer_gets_delta,
+         (SUM ((ss.disk_reads_delta)) disk_reads_delta
+    FROM dba_hist_sqlstat ss, dba_hist_snapshot sn
+   WHERE     SS.SNAP_ID = sn.snap_id
+         AND ss.dbid = sn.dbid
+         AND ss.instance_number = sn.instance_number
+         AND sql_id = '&sql_id'
+--AND sn.begin_interval_time >= TRUNC (SYSDATE-1)
+GROUP BY TRUNC (sn.begin_interval_time, 'HH24')
+ORDER BY hr
