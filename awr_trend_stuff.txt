@@ -1,0 +1,109 @@
+---
+--- All of these queries depend upon the views created by the awr_delta_views.sql script
+---
+
+---
+--- Daily trends for (some) key system statistics. Nice for pulling into Excel and
+--- creating a graph...
+---
+  SELECT TRUNC (sn.begin_interval_time, 'DD') begin_interval_time,
+         SUM (
+            CASE st.stat_name WHEN 'CPU used by this session' THEN st.VALUE END)
+            cpu_used_by_this_session,
+         SUM (CASE st.stat_name WHEN 'parse count (hard)' THEN st.VALUE END)
+            parse_count_hard,
+         SUM (CASE st.stat_name WHEN 'parse count (total)' THEN st.VALUE END)
+            parse_count_total,
+         SUM (CASE st.stat_name WHEN 'redo size' THEN st.VALUE END) redo_size,
+         SUM (CASE st.stat_name WHEN 'session logical reads' THEN st.VALUE END)
+            session_logical_reads,
+         SUM (
+            CASE st.stat_name WHEN 'table scan blocks gotten' THEN st.VALUE END)
+            table_scan_blocks_gotten,
+         SUM (CASE st.stat_name WHEN 'user calls' THEN st.VALUE END) user_calls,
+         SUM (CASE st.stat_name WHEN 'execute count' THEN st.VALUE END)
+            execute_count,
+         SUM (CASE st.stat_name WHEN 'physical reads' THEN st.VALUE END)
+            physical_reads,
+         SUM (CASE st.stat_name WHEN 'physical writes' THEN st.VALUE END)
+            physical_writes
+    FROM dba_hist_snapshot sn, dba_tools.delta$sysstat st
+   WHERE     sn.snap_id = st.snap_id
+         AND sn.dbid = st.dbid
+         AND sn.instance_number = st.instance_number
+         AND sn.begin_interval_time > ADD_MONTHS (SYSDATE, -1)
+GROUP BY TRUNC (sn.begin_interval_time, 'DD')
+ORDER BY TRUNC (sn.begin_interval_time, 'DD')
+
+---
+--- Minutely trends for (some) key system statistics
+--- The level of granularity will depend upon your 
+--- AWR snapshot frequency...
+---
+  SELECT TRUNC (sn.begin_interval_time, 'MI') begin_interval_time,
+         SUM (
+            CASE st.stat_name WHEN 'CPU used by this session' THEN st.VALUE END)
+            cpu_used_by_this_session,
+         SUM (CASE st.stat_name WHEN 'parse count (hard)' THEN st.VALUE END)
+            parse_count_hard,
+         SUM (CASE st.stat_name WHEN 'parse count (total)' THEN st.VALUE END)
+            parse_count_total,
+         SUM (CASE st.stat_name WHEN 'redo size' THEN st.VALUE END) redo_size,
+         SUM (CASE st.stat_name WHEN 'session logical reads' THEN st.VALUE END)
+            session_logical_reads,
+         SUM (
+            CASE st.stat_name WHEN 'table scan blocks gotten' THEN st.VALUE END)
+            table_scan_blocks_gotten,
+         SUM (CASE st.stat_name WHEN 'user calls' THEN st.VALUE END) user_calls,
+         SUM (CASE st.stat_name WHEN 'execute count' THEN st.VALUE END)
+            execute_count,
+         SUM (CASE st.stat_name WHEN 'physical reads' THEN st.VALUE END)
+            physical_reads,
+         SUM (CASE st.stat_name WHEN 'physical writes' THEN st.VALUE END)
+            physical_writes
+    FROM dba_hist_snapshot sn, dba_tools.delta$sysstat st
+   WHERE     sn.snap_id = st.snap_id
+         AND sn.dbid = st.dbid
+         AND sn.instance_number = st.instance_number
+         AND sn.begin_interval_time >=
+                TO_DATE ('&start_time', 'dd/mm/yyyy hh24:mi:ss')
+         AND sn.begin_interval_time <=
+                TO_DATE ('&end_time', 'dd/mm/yyyy hh24:mi:ss')
+GROUP BY TRUNC (sn.begin_interval_time, 'MI')
+ORDER BY begin_interval_time ASC
+
+---
+--- Minutely trends for (some) key system statistics for a specific service.
+--- The level of granularity will depend upon your AWR snapshot frequency...
+---
+  SELECT TRUNC (sn.begin_interval_time, 'MI') begin_interval_time,
+         SUM (CASE st.stat_name WHEN 'DB time' THEN st.VALUE / 1000000 END)
+            db_time_secs,
+         SUM (CASE st.stat_name WHEN 'DB CPU' THEN st.VALUE / 1000000 END)
+            db_cpu_secs,
+         SUM (CASE st.stat_name WHEN 'parse count (total)' THEN st.VALUE END)
+            parse_count_total,
+         SUM (CASE st.stat_name WHEN 'redo size' THEN st.VALUE END) redo_size,
+         SUM (CASE st.stat_name WHEN 'session logical reads' THEN st.VALUE END)
+            session_logical_reads,
+         SUM (CASE st.stat_name WHEN 'user calls' THEN st.VALUE END) user_calls,
+         SUM (CASE st.stat_name WHEN 'execute count' THEN st.VALUE END)
+            execute_count,
+         SUM (CASE st.stat_name WHEN 'physical reads' THEN st.VALUE END)
+            physical_reads,
+         SUM (CASE st.stat_name WHEN 'physical writes' THEN st.VALUE END)
+            physical_writes,
+         SUM (CASE st.stat_name WHEN 'user commits' THEN st.VALUE END)
+            user_commits,
+         SUM (CASE st.stat_name WHEN 'user rollbacks' THEN st.VALUE END)
+            user_rollbacks
+    FROM dba_hist_snapshot sn, dba_tools.delta$service_stat st
+   WHERE     sn.snap_id = st.snap_id
+         AND sn.dbid = st.dbid
+         AND sn.instance_number = st.instance_number
+         AND sn.begin_interval_time >= TRUNC (SYSDATE - &days)
+         AND st.service_name = '&service_name'
+GROUP BY TRUNC (sn.begin_interval_time, 'MI')
+ORDER BY TRUNC (sn.begin_interval_time, 'MI')
+
+
