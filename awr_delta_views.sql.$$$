@@ -31,10 +31,6 @@
  *      said, not all of Tim's views have their equivalent here, as I'm creating
  *	them as I need them!
  *
- *	Also, see Oracle White Paper "Historical Performance Analysis Using AWR"
- *	by Kurt Engeleiter & Cecilia Gervasio Grant for some of the SQL behind
- *	DELTA$TABLESPACE_USAGE.
- *
  *	Note that TABLESPACE_USEDSIZE in DELTA$TABLESPACE_USAGE includes space
  *	occupied by recyclebin objects. This is a problem/feature of the AWR
  *	DBA_HIST_TBSPC_SPACE_USAGE view. Oracle Support have submitted a bug
