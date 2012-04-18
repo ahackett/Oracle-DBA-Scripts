@@ -1,1 +1,20 @@
-
+---
+--- Locate statements of interest in SQL Monitoring view...
+---
+  SELECT sid,
+         session_serial# serial#,
+         program,
+         sql_id,
+         status,
+         error_message,
+         sql_plan_hash_value plan_hash_value,
+         sql_exec_id,
+         status,
+         TO_CHAR (sql_exec_start, 'dd/mm/yyyy hh24:mi:ss') sql_exec_start,
+         elapsed_time / 1000000 etime,
+         buffer_gets,
+         disk_reads,
+         xmltype (binds_xml) binds_xml
+    FROM v$sql_monitor
+   WHERE username = '&username' AND sql_text LIKE '% &sql_contains %'
+ORDER BY etime DESC
