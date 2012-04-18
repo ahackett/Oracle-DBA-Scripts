@@ -251,7 +251,7 @@ echo "$CurrTime" >> $Log
 #----------------------------------------------------------------------------
 if [ -s $SpoolFile ]
 then
-        ErrMsg="$Pgm: long running bet history queries ($LastTime - $CurrTime)"
+        ErrMsg="$Pgm: long running xxx queries ($LastTime - $CurrTime)"
         notify_via_email
         rm -f $SpoolFile
         exit 11
